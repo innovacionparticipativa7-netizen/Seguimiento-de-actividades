@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguimiento de Actividades</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== PANTALLA DE INGRESO ===== -->
+  <section id="pantalla-login" class="pantalla activa">
+    <div class="login-card">
+      <div class="logo">✓</div>
+      <h1>Seguimiento de Actividades</h1>
+      <p class="sub">Ingresa tu número de empleado para continuar</p>
+      <form id="form-login">
+        <input id="input-empleado" type="text" inputmode="numeric" autocomplete="off"
+               placeholder="Ej. 10020" required autofocus>
+        <button type="submit" id="btn-entrar">Entrar</button>
+      </form>
+      <p id="login-error" class="error"></p>
+    </div>
+  </section>
+
+  <!-- ===== PANTALLA PRINCIPAL ===== -->
+  <section id="pantalla-app" class="pantalla">
+    <header class="topbar">
+      <h2>Seguimiento de Actividades</h2>
+      <div class="topbar-der">
+        <span id="top-nombre"></span>
+        <button id="btn-salir" class="btn-sec">Salir</button>
+      </div>
+    </header>
+
+    <main class="layout">
+
+      <!-- Columna izquierda: datos del empleado -->
+      <aside class="col card">
+        <h3>Mis datos</h3>
+        <div class="avatar" id="avatar"></div>
+        <dl class="datos">
+          <dt>Nombre</dt>            <dd id="d-nombre">—</dd>
+          <dt>No. de empleado</dt>   <dd id="d-numero">—</dd>
+          <dt>Área</dt>              <dd id="d-area">—</dd>
+          <dt>Rol</dt>               <dd id="d-rol">—</dd>
+          <dt>Puntos actuales</dt>   <dd id="d-puntos">—</dd>
+          <dt>Puntos acumulados</dt> <dd id="d-acumulados">—</dd>
+        </dl>
+      </aside>
+
+      <!-- Columna central: filtro + actividades -->
+      <section class="col">
+        <div class="card">
+          <h3>Filtro</h3>
+          <div class="filtros">
+            <label>Periodo
+              <select id="f-periodo">
+                <option value="dia">Día</option>
+                <option value="mes">Mes</option>
+                <option value="anio">Año</option>
+              </select>
+            </label>
+            <label>Fecha
+              <input id="f-dia" type="date">
+              <input id="f-mes" type="month" hidden>
+              <input id="f-anio" type="number" min="2000" max="2100" hidden>
+            </label>
+            <label>Tipo
+              <select id="f-tipo">
+                <option value="todas">Todas</option>
+                <option value="diaria">Diarias</option>
+                <option value="semanal">Semanales</option>
+                <option value="mensual">Mensuales</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Nueva actividad</h3>
+          <form id="form-actividad" class="form-act">
+            <input id="a-titulo" type="text" placeholder="Descripción de la actividad" required maxlength="150">
+            <select id="a-tipo">
+              <option value="diaria">Diaria</option>
+              <option value="semanal">Semanal</option>
+              <option value="mensual">Mensual</option>
+            </select>
+            <input id="a-fecha" type="date" required>
+            <input id="a-porcentaje" type="number" min="0" max="100" step="1" placeholder="% (opcional)">
+            <button type="submit">Agregar</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="lista-head">
+            <h3>Actividades <span id="lbl-periodo" class="muted"></span></h3>
+          </div>
+          <ul id="lista" class="lista"></ul>
+          <p id="vacio" class="muted vacio" hidden>No hay actividades en este periodo.</p>
+        </div>
+      </section>
+
+      <!-- Columna derecha: promedio de cumplimiento -->
+      <aside class="col card resumen">
+        <h3>Cumplimiento</h3>
+        <div class="anillo" id="anillo">
+          <div class="anillo-centro">
+            <span id="r-porcentaje">0%</span>
+            <small id="r-modo">—</small>
+          </div>
+        </div>
+        <div class="stats">
+          <div><span id="r-total">0</span><small>Total</small></div>
+          <div><span id="r-hechas" class="ok">0</span><small>Cumplidas</small></div>
+          <div><span id="r-pend" class="pend">0</span><small>Pendientes</small></div>
+        </div>
+        <p id="r-aviso" class="aviso" hidden></p>
+        <h4>Por tipo</h4>
+        <div id="r-tipos"></div>
+        <p class="nota">
+          Si asignas un % a una actividad, se usa ese valor. Las actividades sin % se reparten
+          por igual lo que falte para llegar a 100%. Si ninguna tiene %, todas valen lo mismo.
+        </p>
+      </aside>
+
+    </main>
+  </section>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
