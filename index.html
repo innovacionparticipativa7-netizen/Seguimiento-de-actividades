@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seguimiento de Actividades</title>
+  <title>Standard Work</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Librería para leer y generar archivos Excel / CSV -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
 </head>
 <body>
 
-  <!-- ===== PANTALLA DE INGRESO ===== -->
+  <!-- ===================== INGRESO ===================== -->
   <section id="pantalla-login" class="pantalla activa">
     <div class="login-card">
-      <div class="logo">✓</div>
-      <h1>Seguimiento de Actividades</h1>
+      <div class="logo">SW</div>
+      <h1>Standard Work</h1>
       <p class="sub">Ingresa tu número de empleado para continuar</p>
       <form id="form-login">
         <input id="input-empleado" type="text" inputmode="numeric" autocomplete="off"
@@ -23,109 +25,279 @@
     </div>
   </section>
 
-  <!-- ===== PANTALLA PRINCIPAL ===== -->
+  <!-- ===================== APP ===================== -->
   <section id="pantalla-app" class="pantalla">
     <header class="topbar">
-      <h2>Seguimiento de Actividades</h2>
+      <div class="marca">
+        <span class="marca-logo">SW</span>
+        <h2>Standard Work</h2>
+      </div>
+      <nav class="tabs" id="tabs" hidden>
+        <button class="tab activo" data-vista="mi">Mi Standard Work</button>
+        <button class="tab" data-vista="admin">Administración</button>
+      </nav>
       <div class="topbar-der">
         <span id="top-nombre"></span>
+        <span id="top-rol" class="rol-chip"></span>
         <button id="btn-salir" class="btn-sec">Salir</button>
       </div>
     </header>
 
-    <main class="layout">
+    <!-- =============== VISTA: MI STANDARD WORK =============== -->
+    <div id="vista-mi" class="vista activa">
+      <main class="layout">
 
-      <!-- Columna izquierda: datos del empleado -->
-      <aside class="col card">
-        <h3>Mis datos</h3>
-        <div class="avatar" id="avatar"></div>
-        <dl class="datos">
-          <dt>Nombre</dt>            <dd id="d-nombre">—</dd>
-          <dt>No. de empleado</dt>   <dd id="d-numero">—</dd>
-          <dt>Área</dt>              <dd id="d-area">—</dd>
-          <dt>Rol</dt>               <dd id="d-rol">—</dd>
-          <dt>Puntos actuales</dt>   <dd id="d-puntos">—</dd>
-          <dt>Puntos acumulados</dt> <dd id="d-acumulados">—</dd>
-        </dl>
-      </aside>
+        <!-- Izquierda: datos + desempeño -->
+        <aside class="col col-izq">
+          <div class="card">
+            <h3>Mis datos</h3>
+            <div class="avatar" id="avatar"></div>
+            <dl class="datos">
+              <dt>Nombre</dt>          <dd id="d-nombre">—</dd>
+              <dt>No. de empleado</dt> <dd id="d-numero">—</dd>
+              <dt>Área</dt>            <dd id="d-area">—</dd>
+              <dt>Rol</dt>             <dd id="d-rol">—</dd>
+            </dl>
+          </div>
 
-      <!-- Columna central: filtro + actividades -->
-      <section class="col">
-        <div class="card">
-          <h3>Filtro</h3>
-          <div class="filtros">
-            <label>Periodo
-              <select id="f-periodo">
-                <option value="dia">Día</option>
-                <option value="mes">Mes</option>
-                <option value="anio">Año</option>
+          <div class="card">
+            <h3>Desempeño</h3>
+            <div class="bloque">
+              <div class="bloque-tit">Cinturón</div>
+              <div id="belt-badge" class="belt-badge sin">Sin asignar</div>
+              <div class="belt-escalera" id="belt-escalera"></div>
+            </div>
+            <div class="bloque">
+              <div class="bloque-tit">Puntos IP</div>
+              <div class="ip-grid">
+                <div><span id="ip-actuales">0</span><small>Actuales</small></div>
+                <div><span id="ip-acumulados">0</span><small>Acumulados</small></div>
+                <div><span id="ip-ideas">0</span><small>Ideas</small></div>
+              </div>
+            </div>
+            <div class="bloque">
+              <div class="bloque-tit">Evaluaciones 5S</div>
+              <div class="eval">
+                <div class="linea"><span>Semanal <small id="s5-sem-lbl" class="muted"></small></span><strong id="s5-sem">—</strong></div>
+                <div class="barra"><div id="s5-sem-bar"></div></div>
+              </div>
+              <div class="eval">
+                <div class="linea"><span>Mensual <small id="s5-mes-lbl" class="muted"></small></span><strong id="s5-mes">—</strong></div>
+                <div class="barra"><div id="s5-mes-bar"></div></div>
+              </div>
+              <p id="s5-ultima" class="muted mini"></p>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Centro: filtro + actividades -->
+        <section class="col">
+          <div class="card periodo-ctrl" id="ctrl-mi">
+            <div class="segmentos">
+              <button data-periodo="dia" class="seg">Día</button>
+              <button data-periodo="semana" class="seg">Semana</button>
+              <button data-periodo="mes" class="seg">Mes</button>
+              <button data-periodo="todos" class="seg">Todos</button>
+            </div>
+            <div class="nav-periodo">
+              <button class="btn-icono" data-mover="-1" title="Anterior">‹</button>
+              <span class="lbl-periodo"></span>
+              <button class="btn-icono" data-mover="1" title="Siguiente">›</button>
+              <button class="btn-sec btn-hoy" data-hoy>Hoy</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="lista-head">
+              <h3>Mis actividades</h3>
+              <button id="btn-nueva">+ Nueva actividad</button>
+            </div>
+
+            <div id="panel-nueva" class="panel-nueva">
+              <form id="form-actividad" class="form-act">
+                <label class="full">Descripción
+                  <input id="a-titulo" type="text" placeholder="¿Qué actividad vas a realizar?" required maxlength="150">
+                </label>
+                <label>Tipo
+                  <select id="a-tipo">
+                    <option value="diaria">Diaria</option>
+                    <option value="semanal">Semanal</option>
+                    <option value="mensual">Mensual</option>
+                  </select>
+                </label>
+                <label>Fecha
+                  <input id="a-fecha" type="date" required>
+                </label>
+                <label>Porcentaje (opcional)
+                  <input id="a-porcentaje" type="number" min="0" max="100" step="1" placeholder="auto">
+                </label>
+                <div class="form-botones full">
+                  <button type="button" class="btn-sec" id="btn-cancelar">Cancelar</button>
+                  <button type="submit">Guardar actividad</button>
+                </div>
+              </form>
+            </div>
+
+            <ul id="lista" class="lista"></ul>
+            <p id="vacio" class="muted vacio" hidden>No hay actividades en este periodo.</p>
+          </div>
+        </section>
+
+        <!-- Derecha: cumplimiento -->
+        <aside class="col card resumen">
+          <h3>Cumplimiento</h3>
+          <div class="anillo" id="anillo">
+            <div class="anillo-centro">
+              <span id="r-porcentaje">0%</span>
+              <small id="r-modo">—</small>
+            </div>
+          </div>
+          <div class="stats">
+            <div><span id="r-total">0</span><small>Total</small></div>
+            <div><span id="r-hechas" class="ok">0</span><small>Cumplidas</small></div>
+            <div><span id="r-pend" class="pend">0</span><small>Pendientes</small></div>
+          </div>
+          <p id="r-aviso" class="aviso" hidden></p>
+          <h4>Por tipo</h4>
+          <div id="r-tipos"></div>
+          <p class="nota">
+            Si asignas un % a una actividad, se usa ese valor. Las actividades sin % se reparten
+            por igual lo que falte para llegar a 100%. Si ninguna tiene %, todas valen lo mismo.
+          </p>
+        </aside>
+      </main>
+    </div>
+
+    <!-- =============== VISTA: ADMINISTRACIÓN =============== -->
+    <div id="vista-admin" class="vista">
+      <div class="admin-wrap">
+        <div class="subtabs">
+          <button class="subtab activo" data-sub="equipo">Desempeño del equipo</button>
+          <button class="subtab" data-sub="cargar">Cargar datos</button>
+          <button class="subtab" data-sub="roles" id="subtab-roles" hidden>Roles</button>
+        </div>
+
+        <!-- ---------- Desempeño del equipo ---------- -->
+        <section id="sub-equipo" class="sub activa">
+          <div class="card admin-filtros">
+            <div class="periodo-ctrl" id="ctrl-adm">
+              <div class="segmentos">
+                <button data-periodo="dia" class="seg">Día</button>
+                <button data-periodo="semana" class="seg">Semana</button>
+                <button data-periodo="mes" class="seg">Mes</button>
+                <button data-periodo="todos" class="seg">Todos</button>
+              </div>
+              <div class="nav-periodo">
+                <button class="btn-icono" data-mover="-1" title="Anterior">‹</button>
+                <span class="lbl-periodo"></span>
+                <button class="btn-icono" data-mover="1" title="Siguiente">›</button>
+                <button class="btn-sec btn-hoy" data-hoy>Hoy</button>
+              </div>
+            </div>
+            <div class="filtros-fila">
+              <input id="adm-buscar" type="search" placeholder="Buscar por nombre o número...">
+              <select id="adm-area"><option value="">Todas las áreas</option></select>
+              <select id="adm-orden">
+                <option value="nombre">Ordenar: nombre</option>
+                <option value="cumpl-desc">Mayor cumplimiento</option>
+                <option value="cumpl-asc">Menor cumplimiento</option>
+                <option value="area">Área</option>
               </select>
-            </label>
-            <label>Fecha
-              <input id="f-dia" type="date">
-              <input id="f-mes" type="month" hidden>
-              <input id="f-anio" type="number" min="2000" max="2100" hidden>
-            </label>
-            <label>Tipo
-              <select id="f-tipo">
-                <option value="todas">Todas</option>
-                <option value="diaria">Diarias</option>
-                <option value="semanal">Semanales</option>
-                <option value="mensual">Mensuales</option>
-              </select>
-            </label>
+              <label class="check"><input type="checkbox" id="adm-solo"> Solo con actividades</label>
+              <button class="btn-sec" id="adm-recargar" title="Volver a cargar datos">↻ Actualizar</button>
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <h3>Nueva actividad</h3>
-          <form id="form-actividad" class="form-act">
-            <input id="a-titulo" type="text" placeholder="Descripción de la actividad" required maxlength="150">
-            <select id="a-tipo">
-              <option value="diaria">Diaria</option>
-              <option value="semanal">Semanal</option>
-              <option value="mensual">Mensual</option>
-            </select>
-            <input id="a-fecha" type="date" required>
-            <input id="a-porcentaje" type="number" min="0" max="100" step="1" placeholder="% (opcional)">
-            <button type="submit">Agregar</button>
-          </form>
-        </div>
-
-        <div class="card">
-          <div class="lista-head">
-            <h3>Actividades <span id="lbl-periodo" class="muted"></span></h3>
+          <div class="kpis">
+            <div class="card kpi"><small>Personas</small><span id="k-personas">0</span></div>
+            <div class="card kpi"><small>Con actividades</small><span id="k-activos">0</span></div>
+            <div class="card kpi"><small>Cumplimiento promedio</small><span id="k-cumpl">—</span></div>
+            <div class="card kpi"><small>5S mensual promedio</small><span id="k-5s">—</span></div>
           </div>
-          <ul id="lista" class="lista"></ul>
-          <p id="vacio" class="muted vacio" hidden>No hay actividades en este periodo.</p>
-        </div>
-      </section>
 
-      <!-- Columna derecha: promedio de cumplimiento -->
-      <aside class="col card resumen">
-        <h3>Cumplimiento</h3>
-        <div class="anillo" id="anillo">
-          <div class="anillo-centro">
-            <span id="r-porcentaje">0%</span>
-            <small id="r-modo">—</small>
+          <div class="card">
+            <div class="tabla-scroll">
+              <table class="tabla" id="tabla-equipo">
+                <thead>
+                  <tr>
+                    <th>Empleado</th>
+                    <th>Área</th>
+                    <th>Cinturón</th>
+                    <th class="c">Actividades</th>
+                    <th>Cumplimiento</th>
+                    <th class="c">5S sem.</th>
+                    <th class="c">5S mes</th>
+                    <th class="c">Puntos IP</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <p id="equipo-estado" class="muted vacio"></p>
           </div>
-        </div>
-        <div class="stats">
-          <div><span id="r-total">0</span><small>Total</small></div>
-          <div><span id="r-hechas" class="ok">0</span><small>Cumplidas</small></div>
-          <div><span id="r-pend" class="pend">0</span><small>Pendientes</small></div>
-        </div>
-        <p id="r-aviso" class="aviso" hidden></p>
-        <h4>Por tipo</h4>
-        <div id="r-tipos"></div>
-        <p class="nota">
-          Si asignas un % a una actividad, se usa ese valor. Las actividades sin % se reparten
-          por igual lo que falte para llegar a 100%. Si ninguna tiene %, todas valen lo mismo.
-        </p>
-      </aside>
+        </section>
 
-    </main>
+        <!-- ---------- Cargar datos ---------- -->
+        <section id="sub-cargar" class="sub">
+          <div class="card">
+            <h3>Cargar datos desde Excel o CSV</h3>
+            <p class="muted">1) Elige qué vas a cargar · 2) Descarga la plantilla y llénala · 3) Sube el archivo, revisa y confirma.</p>
+            <div class="carga-tipos" id="carga-tipos"></div>
+            <p id="carga-desc" class="carga-desc"></p>
+            <div class="carga-acciones">
+              <button class="btn-sec" id="btn-plantilla">⬇ Descargar plantilla</button>
+              <label class="btn-archivo">📄 Elegir archivo
+                <input type="file" id="carga-archivo" accept=".xlsx,.xls,.csv" hidden>
+              </label>
+              <span id="carga-nombre" class="muted"></span>
+            </div>
+            <div id="carga-preview" class="tabla-scroll"></div>
+            <div class="carga-pie">
+              <span id="carga-resumen" class="muted"></span>
+              <button id="btn-subir" disabled>Subir datos</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---------- Roles (solo master) ---------- -->
+        <section id="sub-roles" class="sub">
+          <div class="card">
+            <div class="lista-head">
+              <h3>Roles y permisos</h3>
+              <input id="rol-buscar" type="search" placeholder="Buscar persona..." class="buscar-corto">
+            </div>
+            <div class="roles-info">
+              <div><span class="rol-chip usuario">Usuario</span> Registra y cumple sus propias actividades.</div>
+              <div><span class="rol-chip admin">Admin</span> Además ve el desempeño del equipo y carga datos.</div>
+              <div><span class="rol-chip master">Master</span> Además asigna roles a otras personas.</div>
+            </div>
+            <div class="tabla-scroll">
+              <table class="tabla" id="tabla-roles">
+                <thead><tr><th>Empleado</th><th>Área</th><th>Rol</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <p id="roles-estado" class="muted vacio"></p>
+          </div>
+        </section>
+      </div>
+    </div>
   </section>
+
+  <!-- ===================== MODAL DETALLE PERSONA ===================== -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3 id="m-nombre"></h3>
+          <p id="m-sub" class="muted"></p>
+        </div>
+        <button class="btn-icono" id="m-cerrar" title="Cerrar">✕</button>
+      </div>
+      <div id="m-cuerpo"></div>
+    </div>
+  </div>
 
   <div id="toast" class="toast"></div>
 
